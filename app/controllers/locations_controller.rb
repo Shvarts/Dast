@@ -1,14 +1,12 @@
 class LocationsController < ApplicationController
+
+  respond_to :json, :html
   # GET /locations
   # GET /locations.xml
   def index
     @locations = Location.all
     @json = Location.all.to_gmaps4rails
-
-    respond_to do |format|
-      format.html # index.html.erb
-      format.xml  { render :xml => @locations }
-    end
+    respond_with @json
   end
 
   # GET /locations/1
@@ -99,7 +97,7 @@ class LocationsController < ApplicationController
         @location = Location.new(:address => row[0].to_s, :zip => row[1])
 #        @location.process_geocoding
         i+=1
-        if i>=3
+        if i>=2
           @location.save
         end  
       end

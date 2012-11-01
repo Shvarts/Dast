@@ -1,3 +1,14 @@
+<% content_for :script do%>
+  <script type="text/javascript" charset="utf-8">
+    $(function(){
+      $("#replace_markers").click(function(){
+        $.getJSON("/locations.json", function(data){
+          Gmaps4Rails.replace_markers(data);
+        });
+      });
+    });
+  </script>
+<%end%>
 <h1>Listing locations</h1>
 
 <table>
@@ -33,4 +44,7 @@
 
 <br />
 <%= link_to 'New Location', new_location_path %>
-<%= gmaps4rails(@json) %>
+<%= gmaps("map_options" => {"auto_adjust" => "true"},
+          "markers" => {"data" => @json, "options" => {"list_container" => "markers_list"} }) %>
+<button id="replace_markers">Refresh Markers</button>
+<ul id="markers_list">  </ul>
