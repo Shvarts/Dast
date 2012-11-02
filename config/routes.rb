@@ -1,4 +1,6 @@
 DastConsulting::Application.routes.draw do
+  devise_for :users
+
   resources :locations
   match 'locations/excel' => 'locations#excel'
   # The priority is based upon order of creation:
