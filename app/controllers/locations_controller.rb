@@ -92,21 +92,24 @@ class LocationsController < ApplicationController
   end
 
   def excel
-    @locations = Location.all
-        Spreadsheet.client_encoding = 'UTF-8'
+    Spreadsheet.client_encoding = 'UTF-8'
  
     uploaded_io = params[:dump][:excel_file]
     File.open(Rails.root.join('app', 'assets', 'files', uploaded_io.original_filename), 'wb+') do |file|
       file.write(uploaded_io.read)
     end
-    #file_format = uploaded_io.to_s.split(".")
-    #if file_format[1]=="xls"
-    if uploaded_io.original_filename.split(".")[1] == "xls"
-      book = Spreadsheet.open("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
-      sheet1 = book.worksheet 0
+
+      addresses = []
+      zips = []
+      a_n = nil
+      z_n = nil
       row_size = 0
       col_size = 0
+   
+    if uploaded_io.original_filename.split(".").last == "xls"
 
+      book = Spreadsheet.open("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
+      sheet1 = book.worksheet 0
       sheet1.each do |row|
         row_size = row.size
         if row[0]!=''
@@ -114,11 +117,6 @@ class LocationsController < ApplicationController
         end
       end
       col_size+=1
-      puts "col_size #{col_size} /n row_size #{row_size}"
-      addresses = []
-      zips = []
-      a_n = nil
-      z_n = nil
       row_size.times do |i|
         sheet1.each do |row|
           if row!='' || row!=nil
@@ -136,17 +134,11 @@ class LocationsController < ApplicationController
         end
       end
     else
-      addresses = []
-      zips = []
-      a_n = nil
-      z_n = nil
-      row_size = 0
-      col_size = 0
+
       oo = Excelx.new("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
       oo.default_sheet = oo.sheets.first
       row_size = oo.first_row.size
       col_size = oo.first_column.size
-      puts "row_size #{row_size}"
       1.upto(row_size) do |i|
         if oo.cell(1,i)=="Address"
           a_n=i
@@ -165,25 +157,32 @@ class LocationsController < ApplicationController
       end        
     end
 
-
     addresses.size.times do |i|
       @location = Location.new(:address => addresses[i], :zip => zips[i])
       @location.save
     end
 
     respond_to do |format|
-    #  if @location.save
+      if @location.save
         format.html { redirect_to(@location, :notice => 'Location was successfully created.') }
         format.xml  { render :xml => @location, :status => :created, :location => @location }
-    #  else
-    #    format.html { render :action => "new" }
-    #    format.xml  { render :xml => @location.errors, :status => :unprocessable_entity }
-     # end
+      else
+        format.html { render :action => "new" }
+        format.xml  { render :xml => @location.errors, :status => :unprocessable_entity }
+      end
     end  
-  #  redirect_to locations_path
   end  
+
   def authenticate
      redirect_to("/users/sign_in") unless user_signed_in?
+  end
+
+  def parse_xls_spreadsheet
+
+  end
+
+  def parse_xlsx_roo
+
   end
 
 end
