@@ -8,6 +8,7 @@ gem 'rails', '3.2.8'
 gem 'sqlite3'
 gem "spreadsheet"
 gem 'devise'
+gem 'roo'
 #gem 'rubyXL'
 # Gems used only for assets and not required
 # in production environments by default.

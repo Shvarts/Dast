@@ -101,38 +101,70 @@ class LocationsController < ApplicationController
     end
     #file_format = uploaded_io.to_s.split(".")
     #if file_format[1]=="xls"
-    book = Spreadsheet.open("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
-    sheet1 = book.worksheet 0
-    row_size = 0
-    col_size = 0
+    if uploaded_io.original_filename.split(".")[1] == "xls"
+      book = Spreadsheet.open("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
+      sheet1 = book.worksheet 0
+      row_size = 0
+      col_size = 0
 
-    sheet1.each do |row|
-      row_size = row.size
-      if row[0]!=''
-        col_size +=1
-      end
-    end
-    col_size+=1
-    addresses = []
-    zips = []
-    a_n = nil
-    z_n = nil
-    row_size.times do |i|
       sheet1.each do |row|
-        if row!='' || row!=nil
-          if a_n==i
-            addresses<<row[i].to_s
-          elsif z_n==i
-            zips<<row[i].to_i 
-          end
-          if row[i].to_s == 'Address'
-            a_n=i
-          elsif row[i].to_s == 'Zip+4' || row[i].to_s == 'Zip'
-            z_n=i
+        row_size = row.size
+        if row[0]!=''
+          col_size +=1
+        end
+      end
+      col_size+=1
+      puts "col_size #{col_size} /n row_size #{row_size}"
+      addresses = []
+      zips = []
+      a_n = nil
+      z_n = nil
+      row_size.times do |i|
+        sheet1.each do |row|
+          if row!='' || row!=nil
+            if a_n==i
+              addresses<<row[i].to_s
+            elsif z_n==i
+              zips<<row[i].to_i 
+            end
+            if row[i].to_s == 'Address'
+              a_n=i
+            elsif row[i].to_s == 'Zip+4' || row[i].to_s == 'Zip'
+              z_n=i
+            end
           end
         end
       end
+    else
+      addresses = []
+      zips = []
+      a_n = nil
+      z_n = nil
+      row_size = 0
+      col_size = 0
+      oo = Excelx.new("#{Rails.root}/app/assets/files/#{uploaded_io.original_filename}")
+      oo.default_sheet = oo.sheets.first
+      row_size = oo.first_row.size
+      col_size = oo.first_column.size
+      puts "row_size #{row_size}"
+      1.upto(row_size) do |i|
+        if oo.cell(1,i)=="Address"
+          a_n=i
+        elsif oo.cell(1,i)=="Zip+4"
+          z_n=i
+        end 
+        1.upto(col_size) do |j|
+          if (oo.cell(j,i)!='' || oo.cell(j,i)!=nil) && j!=1
+            if a_n==i
+              addresses<<oo.cell(j,i).to_s
+            elsif z_n==i
+              zips<<oo.cell(j,i) 
+            end
+          end
+        end
+      end        
     end
+
 
     addresses.size.times do |i|
       @location = Location.new(:address => addresses[i], :zip => zips[i])
